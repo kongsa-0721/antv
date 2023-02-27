@@ -7,11 +7,11 @@ interface MindMapProps {
 	type: 'nodeDB'
 }
 interface RootProps {
-	projectId: number
-	tableName: string
+	id: string
+	name: string
 	width?: number
 	height?: number
-	children: Array<RootProps | null>
+	children?: Array<RootProps>
 }
 
 export type { MindMapProps, RootProps }

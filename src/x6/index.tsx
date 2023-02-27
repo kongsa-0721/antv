@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Cell } from '@antv/x6'
+import { useState, useRef, useEffect } from 'react'
+import { Cell, Node, Edge } from '@antv/x6'
 import { Button, Select } from 'antd'
 import Hierarchy from '@antv/hierarchy'
 import { apiData, customGraph, virtualTableList } from './conf'
@@ -15,6 +15,8 @@ function RootGraph() {
 	const [targetNode, setTargetNode] = useState()
 	const [sourceNodeList, setSourceNodeList] = useState()
 	const [targetNodeList, setTargetNodeList] = useState()
+	//选中的节点
+	const selectedNodeId = useRef<string>('')
 	// 记录 links
 	const [links, setLinks] = useState([])
 	// 修改的data
@@ -38,7 +40,57 @@ function RootGraph() {
 			globalGraph.current?.clearCells()
 		}
 	}, [])
-
+	useEffect(() => {
+		globalGraph.current?.on('node:mouseenter', ({ node }) => {
+			// 配置节点间关系
+			node.addTools({
+				name: 'button',
+				args: {
+					markup: [
+						{
+							tagName: 'circle',
+							selector: 'button',
+							attrs: {
+								r: 8,
+								stroke: '#1890ff',
+								'stroke-width': 1,
+								fill: 'white',
+								cursor: 'pointer'
+							}
+						},
+						{
+							tagName: 'text',
+							textContent: '···',
+							selector: 'icon',
+							attrs: {
+								fill: '#1890ff',
+								'font-size': 10,
+								'font-weight': 500,
+								'text-anchor': 'middle',
+								'pointer-events': 'none',
+								y: '0.3em'
+							}
+						}
+					],
+					x: '100%',
+					y: '100%',
+					offset: { x: -13, y: -20 },
+					onClick({ cell }: { cell: Node | Edge }) {
+						//获取到当前这个节点的ID,也是tableID
+						selectedNodeId.current = cell.id
+						console.log(cell.id)
+					}
+				}
+			})
+		})
+		// 鼠标移开时删除删除按钮
+		globalGraph.current?.on('node:mouseleave', ({ node }) => {
+			node.removeTool('button')
+		})
+		return () => {
+			globalGraph.current?.clearCells()
+		}
+	}, [links, virtualTableList])
 	/**
 	 * 获取值之后重新渲染
 	 * 不需要fromJson 因为我们在这里createNode
@@ -62,13 +114,13 @@ function RootGraph() {
 				const { data, children } = HierarchyItem
 				cells.push(
 					(graph as customGraph).createNode({
-						id: data.projectId,
+						id: data.id,
 						shape: 'nodeDB',
 						x: HierarchyItem.x,
 						y: HierarchyItem.y,
 						width: data.width,
 						height: data.height,
-						label: data.tableName,
+						label: data.name,
 						type: 'rect'
 					})
 				)
@@ -123,16 +175,25 @@ function RootGraph() {
 	}
 	return (
 		<>
+			选择根节点
 			<Select
 				style={{ width: 300 }}
 				onChange={(tableId: number) => {
-					const { name, id } = virtualTableList.find((i) => i.id === tableId) ?? {}
+					const { name, id } = virtualTableList.find((i) => i.id === tableId) as any
 					// TODO 使用更安全的类型
-					renderGraph({ projectId: id ?? 0, tableName: name ?? '', children: [] })
+					renderGraph({ id: id ?? 0, name: name ?? '', children: [] })
 				}}
 				options={virtualTableList.map((e) => ({ label: e.name, value: e.id }))}
 			/>
+			选择第一个儿子节点
+			<Select
+				style={{ width: 300 }}
+				options={virtualTableList
+					.filter((e) => e.id !== parseInt(selectedNodeId.current))
+					.map((e) => ({ label: e.name, value: e.id }))}
+			/>
 			<Button onClick={clear}>clear</Button>
+			{/* 渲染graph */}
 			<div id='container'>graph</div>
 		</>
 	)
