@@ -4,6 +4,7 @@ export const treeDataToGraphTreeData = (root: RootProps, type: string) => {
 	if (!root) {
 		return null
 	}
+	// 在root上添加了一些属性
 	Object.assign(root, {
 		id: root.projectId,
 		type,

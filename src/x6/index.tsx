@@ -1,17 +1,26 @@
-import * as React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Cell } from '@antv/x6'
-import { Button } from 'antd'
+import { Button, Select } from 'antd'
 import Hierarchy from '@antv/hierarchy'
-import { apiData, customGraph } from './conf'
+import { apiData, customGraph, virtualTableList } from './conf'
 import { MindMapProps, RootProps } from './typing'
 import { treeDataToGraphTreeData } from './utils'
 
 function RootGraph() {
 	// 容器 存放graph实例
-	const globalGraph = React.useRef<customGraph>()
-	const globalData = React.useRef<RootProps | null>()
+	const globalGraph = useRef<customGraph>()
+	const globalData = useRef<RootProps | null>()
+	// 根节点，选中的节点
+	const [sourceNode, setSourceNode] = useState()
+	const [targetNode, setTargetNode] = useState()
+	const [sourceNodeList, setSourceNodeList] = useState()
+	const [targetNodeList, setTargetNodeList] = useState()
+	// 记录 links
+	const [links, setLinks] = useState([])
+	// 修改的data
+	const [buildData, setBuildData] = useState()
 	// 组件渲染之后挂载graph
-	React.useEffect(() => {
+	useEffect(() => {
 		const graph = new customGraph({
 			container: document.getElementById('container') as HTMLDivElement,
 			height: 600,
@@ -103,9 +112,9 @@ function RootGraph() {
 		graph?.resetCells(cells)
 		graph?.centerContent()
 	}
-	// 获取到api的返回值，转化为对应的数据结构，调用rerender 重新渲染。
-	function renderGraph() {
-		globalData.current = treeDataToGraphTreeData(Object.assign({}, apiData.vtableNode) as any, 'nodeDB')
+	// 这个地方我们只在根节点转换的时候调用。
+	function renderGraph(data: RootProps) {
+		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB')
 		console.log(globalData.current)
 		rerender()
 	}
@@ -114,7 +123,15 @@ function RootGraph() {
 	}
 	return (
 		<>
-			<Button onClick={renderGraph}>rerender</Button>
+			<Select
+				style={{ width: 300 }}
+				onChange={(tableId: number) => {
+					const { name, id } = virtualTableList.find((i) => i.id === tableId) ?? {}
+					// TODO 使用更安全的类型
+					renderGraph({ projectId: id ?? 0, tableName: name ?? '', children: [] })
+				}}
+				options={virtualTableList.map((e) => ({ label: e.name, value: e.id }))}
+			/>
 			<Button onClick={clear}>clear</Button>
 			<div id='container'>graph</div>
 		</>
