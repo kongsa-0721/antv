@@ -9,6 +9,7 @@ interface MindMapProps {
 interface RootProps {
 	id: string
 	name: string
+	label?: string
 	width?: number
 	height?: number
 	children?: Array<RootProps>

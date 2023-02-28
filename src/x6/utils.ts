@@ -42,6 +42,8 @@ const findNode = (obj: RootProps, id: string): { parent: RootProps | null; node:
 }
 
 const addChildNode = (data: RootProps, id: string, childrenTable: string): RootProps | null => {
+	console.log('执行 addchild node')
+
 	const res = findNode(data, id)
 	if (!res) {
 		return null
@@ -60,7 +62,9 @@ const addChildNode = (data: RootProps, id: string, childrenTable: string): RootP
 	return item
 }
 
-const changeNode = (data: RootProps, id: string, changeTable: Partial<RootProps>): RootProps | null => {
+const updateNode = (data: RootProps, id: string, changeTable: Partial<RootProps>): RootProps | null => {
+	console.log('执行 update node')
+
 	const res = findNode(data, id)
 	if (!res || !res.node) return null
 
@@ -81,4 +85,18 @@ const removeNode = (data: RootProps, id: string): RootProps[] | null => {
 	return children.splice(index, 1)
 }
 
-export { findNode, addChildNode, changeNode, removeNode }
+function hasId(root: RootProps, id: string): boolean {
+	if (root.id === id) {
+		return true
+	}
+	if (root.children) {
+		for (let i = 0; i < root.children.length; i++) {
+			if (hasId(root.children[i], id)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+export { findNode, addChildNode, updateNode, removeNode, hasId }

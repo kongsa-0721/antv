@@ -1,15 +1,27 @@
 import { useState, useRef, useEffect } from 'react'
 import { Cell, Node, Edge } from '@antv/x6'
-import { Button, Select } from 'antd'
+import { Button, Select, Modal, Form, Input, message } from 'antd'
 import Hierarchy from '@antv/hierarchy'
 import { apiData, customGraph, virtualTableList } from './conf'
 import { MindMapProps, RootProps } from './typing'
-import { treeDataToGraphTreeData, findNode, addChildNode, changeNode, removeNode } from './utils'
+import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
 
 function RootGraph() {
+	/**
+	 * 这里是设置节点间关系的form modal
+	 */
+	const [nodeForm] = Form.useForm()
+	const [nodeModal, setNodeModal] = useState(false)
+	const setNodeOk = () => {
+		nodeForm.submit()
+		setNodeModal(false)
+	}
+	const cancleSetNode = () => {
+		setNodeModal(false)
+	}
 	// 容器 存放graph实例
 	const globalGraph = useRef<customGraph>()
-	const globalData = useRef<RootProps | null>()
+	const globalData = useRef<RootProps>({} as any)
 	// 根节点，选中的节点
 	const [sourceNode, setSourceNode] = useState()
 	const [targetNode, setTargetNode] = useState()
@@ -38,6 +50,7 @@ function RootGraph() {
 			globalGraph.current?.clearCells()
 		}
 	}, [])
+	// 节点上的操作
 	useEffect(() => {
 		globalGraph.current?.on('node:mouseenter', ({ node }) => {
 			// 配置节点间关系
@@ -77,6 +90,8 @@ function RootGraph() {
 						//获取到当前这个节点的ID,也是tableID
 						selectedNodeId.current = cell.id
 						console.log(cell.id)
+						nodeForm.resetFields()
+						setNodeModal(true)
 					}
 				}
 			})
@@ -95,6 +110,8 @@ function RootGraph() {
 	 */
 	function rerender() {
 		const graph = globalGraph.current
+		console.log(globalData.current)
+
 		const result: any = Hierarchy.mindmap(globalData.current, {
 			direction: 'H', //https://github.com/antvis/hierarchy
 			getHeight: (node: MindMapProps) => node.height,
@@ -162,7 +179,7 @@ function RootGraph() {
 	}
 	// 这个地方我们只在根节点转换的时候调用。
 	function renderGraph(data: RootProps) {
-		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB')
+		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB') as RootProps
 		rerender()
 	}
 	return (
@@ -179,6 +196,56 @@ function RootGraph() {
 			/>
 			{/* 渲染graph */}
 			<div id='container' />
+			<Modal title='节点操作' open={nodeModal} onOk={setNodeOk} onCancel={cancleSetNode}>
+				<Form
+					form={nodeForm}
+					onFinish={(formRes) => {
+						const { childrenNode, changedNode, filterType } = formRes
+						if (childrenNode && changedNode) {
+							message.error('只能同时做一个操作')
+							return
+						}
+						if (childrenNode && addChildNode(globalData.current, selectedNodeId.current, childrenNode)) {
+							rerender()
+							return
+						} else if (
+							updateNode(globalData.current, selectedNodeId.current, {
+								id: changedNode,
+								name: changedNode,
+								label: changedNode
+							}) &&
+							changedNode?.length > 0
+						) {
+							rerender()
+							return
+						}
+					}}
+				>
+					<Form.Item name='childrenNode' label='添加子节点'>
+						<Select
+							placeholder='选择子节点'
+							options={virtualTableList
+								.filter((e) => {
+									return !hasId((globalData?.current as RootProps) || [], e.name)
+								})
+								.map((e) => ({ label: e.name, value: e.name }))}
+						/>
+					</Form.Item>
+					<Form.Item name='changedNode' label='修改节点为'>
+						<Select
+							placeholder='修改节点为'
+							options={virtualTableList
+								.filter((e) => {
+									return !hasId((globalData?.current as RootProps) || [], e.name)
+								})
+								.map((e) => ({ label: e.name, value: e.name }))}
+						/>
+					</Form.Item>
+					<Form.Item name='filterType' label='过滤条件'>
+						<Input placeholder='请输入过滤条件' />
+					</Form.Item>
+				</Form>
+			</Modal>
 		</>
 	)
 }
