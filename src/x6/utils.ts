@@ -11,7 +11,7 @@ export const treeDataToGraphTreeData = (root: RootProps, type: string) => {
 		height: 40
 	})
 	if (root.children?.length && root.children.length > 0) {
-		root.children = root.children?.map((childRoot: RootProps) => {
+		root.children = root.children.map((childRoot: RootProps) => {
 			return treeDataToGraphTreeData(childRoot, type) as RootProps
 		})
 	}
@@ -51,7 +51,7 @@ const addChildNode = (data: RootProps, id: string, childrenTable: string): RootP
 		dataItem.children = []
 	}
 	const item: RootProps = {
-		id: childrenTable,
+		id: id,
 		name: childrenTable,
 		width: 100,
 		height: 40
@@ -62,7 +62,7 @@ const addChildNode = (data: RootProps, id: string, childrenTable: string): RootP
 
 const changeNode = (data: RootProps, id: string, changeTable: Partial<RootProps>): RootProps | null => {
 	const res = findItem(data, id)
-	if (!res) return null
+	if (!res || !res.node) return null
 
 	const dataItem = res.node
 
