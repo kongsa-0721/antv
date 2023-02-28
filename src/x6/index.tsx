@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Cell, Node, Edge } from '@antv/x6'
 import { Button, Select, Modal, Form, Input, message } from 'antd'
 import Hierarchy from '@antv/hierarchy'
-import { apiData, customGraph, virtualTableList } from './conf'
+import { apiData, customGraph, joinTypeList, virtualTableList } from './conf'
 import type { MindMapProps, RootProps, LinksProps, JoinKeysProps } from './typing'
 import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
 import { get } from 'lodash-es'
@@ -13,7 +13,7 @@ function RootGraph() {
 	 */
 	const [nodeForm] = Form.useForm()
 	const [nodeModal, setNodeModal] = useState(false)
-	const setNodeOk = () => {
+	const NodeOk = () => {
 		nodeForm.submit()
 		setNodeModal(false)
 		setTimeout(() => {
@@ -23,6 +23,17 @@ function RootGraph() {
 	const cancleSetNode = () => {
 		setNodeModal(false)
 		nodeForm.resetFields()
+	}
+	/**
+	 * 设置表和表之间字段的realtion
+	 */
+	const [relationForm] = Form.useForm()
+	const [relationModal, setRelationModal] = useState(false)
+	const RelationOk = () => {
+		setRelationModal(false)
+	}
+	const cancleSetRelation = () => {
+		setRelationModal(false)
 	}
 	// 容器 存放graph实例
 	const globalGraph = useRef<customGraph>()
@@ -106,9 +117,14 @@ function RootGraph() {
 		// 注册 [连线] 点击事件
 		globalGraph.current?.off('edge:click')
 		globalGraph.current?.on('edge:click', ({ cell }: { cell: Node | Edge }) => {
-			console.log(cell)
-			console.log(get(cell, 'store.data.source.cell', ''))
-			console.log(get(cell, 'store.data.target.cell', ''))
+			const sourceNodeName = get(cell, 'store.data.source.cell', '')
+			const targetNodeName = get(cell, 'store.data.target.cell', '')
+			console.log(sourceNodeName, targetNodeName)
+
+			//先清除表单
+			relationForm.resetFields()
+
+			setRelationModal(true)
 		})
 		// 有根节点才重新渲染
 		globalData.current?.id && rerender()
@@ -207,7 +223,7 @@ function RootGraph() {
 			/>
 			{/* 渲染graph */}
 			<div id='container' />
-			<Modal title='节点操作' open={nodeModal} onOk={setNodeOk} onCancel={cancleSetNode}>
+			<Modal title='节点操作' open={nodeModal} onOk={NodeOk} onCancel={cancleSetNode}>
 				<Form
 					form={nodeForm}
 					onFinish={(formRes) => {
@@ -238,12 +254,12 @@ function RootGraph() {
 							// 修改子节点 也要重新修改links
 							rerender()
 							setLinks((preLinks) => {
-								preLinks.forEach((links) => {
-									if (links['sourceTableName'] === selectedNodeId.current) {
-										links['sourceTableName'] = changedNode
+								preLinks.forEach((link) => {
+									if (link['sourceTableName'] === selectedNodeId.current) {
+										link['sourceTableName'] = changedNode
 									}
-									if (links['targetTableName'] === selectedNodeId.current) {
-										links['targetTableName'] = changedNode
+									if (link['targetTableName'] === selectedNodeId.current) {
+										link['targetTableName'] = changedNode
 									}
 									return
 								})
@@ -274,6 +290,16 @@ function RootGraph() {
 					</Form.Item>
 					<Form.Item name='filterType' label='过滤条件'>
 						<Input placeholder='请输入过滤条件' />
+					</Form.Item>
+				</Form>
+			</Modal>
+			<Modal title='关联关系' open={relationModal} onOk={RelationOk} onCancel={cancleSetRelation}>
+				<Form form={relationForm}>
+					<Form.Item label='关联方式'>
+						<Select
+							placeholder={'请选择关联方式'}
+							options={joinTypeList.map((e) => ({ label: e.label, value: e.value }))}
+						/>
 					</Form.Item>
 				</Form>
 			</Modal>

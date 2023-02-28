@@ -81,6 +81,13 @@ Graph.registerEdge(
 
 export const virtualTableList = Array.from({ length: 20 }, (_, i) => ({ id: i.toString(), name: `table${i}` }))
 
+export const joinTypeList = [
+	{ label: '左外连接', value: 'left_outer_join' },
+	{ label: '内连接', value: 'inner_join' },
+	{ label: '全连接', value: 'full_join' },
+	{ label: '连接', value: 'join' }
+]
+
 export const apiData = {
 	vtableNode: {
 		projectId: 1,
