@@ -79,7 +79,7 @@ Graph.registerEdge(
 	true
 )
 
-export const virtualTableList = Array.from({ length: 20 }, (_, i) => ({ id: i, name: `table${i}` }))
+export const virtualTableList = Array.from({ length: 20 }, (_, i) => ({ id: i.toString(), name: `table${i}` }))
 
 export const apiData = {
 	vtableNode: {

@@ -4,7 +4,7 @@ import { Button, Select } from 'antd'
 import Hierarchy from '@antv/hierarchy'
 import { apiData, customGraph, virtualTableList } from './conf'
 import { MindMapProps, RootProps } from './typing'
-import { treeDataToGraphTreeData } from './utils'
+import { treeDataToGraphTreeData, findNode, addChildNode, changeNode, removeNode } from './utils'
 
 function RootGraph() {
 	// 容器 存放graph实例
@@ -178,23 +178,24 @@ function RootGraph() {
 			选择根节点
 			<Select
 				style={{ width: 300 }}
-				onChange={(tableId: number) => {
-					const { name, id } = virtualTableList.find((i) => i.id === tableId) as any
+				onChange={(tableId: string) => {
+					const { name, id } = virtualTableList.find((i) => i.id === tableId) as { id: string; name: string }
 					// TODO 使用更安全的类型
-					renderGraph({ id: id ?? 0, name: name ?? '', children: [] })
+					renderGraph({ id: id ?? '', name: name ?? '', children: [] })
 				}}
 				options={virtualTableList.map((e) => ({ label: e.name, value: e.id }))}
 			/>
 			选择第一个儿子节点
-			<Select
-				style={{ width: 300 }}
-				options={virtualTableList
-					.filter((e) => e.id !== parseInt(selectedNodeId.current))
-					.map((e) => ({ label: e.name, value: e.id }))}
-			/>
+			<button
+				onClick={() => {
+					addChildNode(globalData.current as RootProps, 'table1', 'tableName3') && rerender()
+				}}
+			>
+				add
+			</button>
 			<Button onClick={clear}>clear</Button>
 			{/* 渲染graph */}
-			<div id='container'>graph</div>
+			<div id='container' />
 		</>
 	)
 }

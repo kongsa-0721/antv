@@ -4,7 +4,7 @@ export const treeDataToGraphTreeData = (root: RootProps, type: string) => {
 	if (!root) return null
 	// 在root上添加了一些属性
 	Object.assign(root, {
-		id: root.id,
+		id: root.name,
 		type,
 		label: root.name,
 		width: root.name?.length * 20 || 60,
@@ -18,7 +18,7 @@ export const treeDataToGraphTreeData = (root: RootProps, type: string) => {
 	return root
 }
 
-export const findItem = (obj: RootProps, id: string): { parent: RootProps | null; node: RootProps } | null => {
+const findNode = (obj: RootProps, id: string): { parent: RootProps | null; node: RootProps } | null => {
 	if (obj.id === id) {
 		return {
 			parent: null,
@@ -28,7 +28,7 @@ export const findItem = (obj: RootProps, id: string): { parent: RootProps | null
 
 	if (obj.children) {
 		for (let i = 0, len = obj.children.length; i < len; i++) {
-			const res = findItem(obj.children[i], id)
+			const res = findNode(obj.children[i], id)
 			if (res) {
 				return {
 					parent: obj,
@@ -42,7 +42,7 @@ export const findItem = (obj: RootProps, id: string): { parent: RootProps | null
 }
 
 const addChildNode = (data: RootProps, id: string, childrenTable: string): RootProps | null => {
-	const res = findItem(data, id)
+	const res = findNode(data, id)
 	if (!res) {
 		return null
 	}
@@ -51,7 +51,7 @@ const addChildNode = (data: RootProps, id: string, childrenTable: string): RootP
 		dataItem.children = []
 	}
 	const item: RootProps = {
-		id: id,
+		id: childrenTable,
 		name: childrenTable,
 		width: 100,
 		height: 40
@@ -61,7 +61,7 @@ const addChildNode = (data: RootProps, id: string, childrenTable: string): RootP
 }
 
 const changeNode = (data: RootProps, id: string, changeTable: Partial<RootProps>): RootProps | null => {
-	const res = findItem(data, id)
+	const res = findNode(data, id)
 	if (!res || !res.node) return null
 
 	const dataItem = res.node
@@ -70,8 +70,8 @@ const changeNode = (data: RootProps, id: string, changeTable: Partial<RootProps>
 	return dataItem
 }
 
-export const removeNode = (data: RootProps, id: string): RootProps[] | null => {
-	const res = findItem(data, id)
+const removeNode = (data: RootProps, id: string): RootProps[] | null => {
+	const res = findNode(data, id)
 	if (!res) return null
 	const { parent, node } = res
 	if (!parent || !parent.children || !node) return null
@@ -80,3 +80,5 @@ export const removeNode = (data: RootProps, id: string): RootProps[] | null => {
 	if (index === -1) return null
 	return children.splice(index, 1)
 }
+
+export { findNode, addChildNode, changeNode, removeNode }
