@@ -14,4 +14,17 @@ interface RootProps {
 	children?: Array<RootProps>
 }
 
-export type { MindMapProps, RootProps }
+interface LinksProps {
+	sourceTableName: string
+	targetTableName: string
+	joinType: 'left join'
+	joinKeys: Array<JoinKeysProps>
+}
+
+interface JoinKeysProps {
+	sourceKey: string
+	targetKey: string
+	condition: string
+}
+
+export type { MindMapProps, RootProps, LinksProps, JoinKeysProps }

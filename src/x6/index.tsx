@@ -3,8 +3,9 @@ import { Cell, Node, Edge } from '@antv/x6'
 import { Button, Select, Modal, Form, Input, message } from 'antd'
 import Hierarchy from '@antv/hierarchy'
 import { apiData, customGraph, virtualTableList } from './conf'
-import { MindMapProps, RootProps } from './typing'
+import type { MindMapProps, RootProps, LinksProps, JoinKeysProps } from './typing'
 import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
+import { get } from 'lodash-es'
 
 function RootGraph() {
 	/**
@@ -15,9 +16,13 @@ function RootGraph() {
 	const setNodeOk = () => {
 		nodeForm.submit()
 		setNodeModal(false)
+		setTimeout(() => {
+			nodeForm.resetFields()
+		}, 500)
 	}
 	const cancleSetNode = () => {
 		setNodeModal(false)
+		nodeForm.resetFields()
 	}
 	// 容器 存放graph实例
 	const globalGraph = useRef<customGraph>()
@@ -30,7 +35,7 @@ function RootGraph() {
 	//选中的节点
 	const selectedNodeId = useRef<string>('')
 	// 记录 links
-	const [links, setLinks] = useState([])
+	const [links, setLinks] = useState<Array<LinksProps>>([] as any)
 	// 组件渲染之后挂载graph
 	useEffect(() => {
 		const graph = new customGraph({
@@ -89,7 +94,6 @@ function RootGraph() {
 					onClick({ cell }: { cell: Node | Edge }) {
 						//获取到当前这个节点的ID,也是tableID
 						selectedNodeId.current = cell.id
-						nodeForm.resetFields()
 						setNodeModal(true)
 					}
 				}
@@ -99,6 +103,15 @@ function RootGraph() {
 		globalGraph.current?.on('node:mouseleave', ({ node }) => {
 			node.removeTool('button')
 		})
+		// 注册 [连线] 点击事件
+		globalGraph.current?.off('edge:click')
+		globalGraph.current?.on('edge:click', ({ cell }: { cell: Node | Edge }) => {
+			console.log(cell)
+			console.log(get(cell, 'store.data.source.cell', ''))
+			console.log(get(cell, 'store.data.target.cell', ''))
+		})
+		// 有根节点才重新渲染
+		globalData.current?.id && rerender()
 		return () => {
 			globalGraph.current?.clearCells()
 		}
@@ -204,17 +217,38 @@ function RootGraph() {
 							return
 						}
 						if (childrenNode && addChildNode(globalData.current, selectedNodeId.current, childrenNode)) {
+							// 添加子节点 rerender & 添加links
 							rerender()
-							return
+							setLinks((preLinks) => {
+								preLinks.push({
+									sourceTableName: selectedNodeId.current,
+									targetTableName: childrenNode,
+									joinType: 'left join',
+									joinKeys: []
+								})
+								return [...preLinks]
+							})
 						} else if (
+							changedNode?.length > 0 &&
 							updateNode(globalData.current, selectedNodeId.current, {
 								id: changedNode,
 								label: changedNode
-							}) &&
-							changedNode?.length > 0
+							})
 						) {
+							// 修改子节点 也要重新修改links
 							rerender()
-							return
+							setLinks((preLinks) => {
+								preLinks.forEach((links) => {
+									if (links['sourceTableName'] === selectedNodeId.current) {
+										links['sourceTableName'] = changedNode
+									}
+									if (links['targetTableName'] === selectedNodeId.current) {
+										links['targetTableName'] = changedNode
+									}
+									return
+								})
+								return [...preLinks]
+							})
 						}
 					}}
 				>
