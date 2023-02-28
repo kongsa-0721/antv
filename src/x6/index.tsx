@@ -89,7 +89,6 @@ function RootGraph() {
 					onClick({ cell }: { cell: Node | Edge }) {
 						//获取到当前这个节点的ID,也是tableID
 						selectedNodeId.current = cell.id
-						console.log(cell.id)
 						nodeForm.resetFields()
 						setNodeModal(true)
 					}
@@ -111,7 +110,6 @@ function RootGraph() {
 	function rerender() {
 		const graph = globalGraph.current
 		console.log(globalData.current)
-
 		const result: any = Hierarchy.mindmap(globalData.current, {
 			direction: 'H', //https://github.com/antvis/hierarchy
 			getHeight: (node: MindMapProps) => node.height,
@@ -133,7 +131,7 @@ function RootGraph() {
 						y: HierarchyItem.y,
 						width: data.width,
 						height: data.height,
-						label: data.name,
+						label: data.label,
 						type: 'rect'
 					})
 				)
@@ -190,7 +188,7 @@ function RootGraph() {
 				onChange={(tableId: string) => {
 					const { name, id } = virtualTableList.find((i) => i.id === tableId) as { id: string; name: string }
 					// TODO 使用更安全的类型
-					renderGraph({ id: id ?? '', name: name ?? '', children: [] })
+					renderGraph({ id: id ?? '', label: name ?? '', children: [] })
 				}}
 				options={virtualTableList.map((e) => ({ label: e.name, value: e.id }))}
 			/>
@@ -211,7 +209,6 @@ function RootGraph() {
 						} else if (
 							updateNode(globalData.current, selectedNodeId.current, {
 								id: changedNode,
-								name: changedNode,
 								label: changedNode
 							}) &&
 							changedNode?.length > 0

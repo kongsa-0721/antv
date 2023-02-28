@@ -4,10 +4,10 @@ export const treeDataToGraphTreeData = (root: RootProps, type: string) => {
 	if (!root) return null
 	// 在root上添加了一些属性
 	Object.assign(root, {
-		id: root.name,
+		id: root.label,
 		type,
-		label: root.name,
-		width: root.name?.length * 20 || 60,
+		label: root.label,
+		width: root.label?.length * 20 || 60,
 		height: 40
 	})
 	if (root.children?.length && root.children.length > 0) {
@@ -54,7 +54,7 @@ const addChildNode = (data: RootProps, id: string, childrenTable: string): RootP
 	}
 	const item: RootProps = {
 		id: childrenTable,
-		name: childrenTable,
+		label: childrenTable,
 		width: 100,
 		height: 40
 	}
