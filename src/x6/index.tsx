@@ -19,8 +19,6 @@ function RootGraph() {
 	const selectedNodeId = useRef<string>('')
 	// 记录 links
 	const [links, setLinks] = useState([])
-	// 修改的data
-	const [buildData, setBuildData] = useState()
 	// 组件渲染之后挂载graph
 	useEffect(() => {
 		const graph = new customGraph({
@@ -105,8 +103,6 @@ function RootGraph() {
 			getVGap: () => 40, //节点间垂直距离
 			getSide: () => 'right'
 		})
-		console.log(result)
-
 		const cells: Cell[] = []
 		// 创建出新的根节点，连线等。
 		function create(HierarchyItem: any) {
@@ -167,11 +163,7 @@ function RootGraph() {
 	// 这个地方我们只在根节点转换的时候调用。
 	function renderGraph(data: RootProps) {
 		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB')
-		console.log(globalData.current)
 		rerender()
-	}
-	function clear() {
-		globalGraph.current?.clearCells()
 	}
 	return (
 		<>
@@ -185,15 +177,6 @@ function RootGraph() {
 				}}
 				options={virtualTableList.map((e) => ({ label: e.name, value: e.id }))}
 			/>
-			选择第一个儿子节点
-			<button
-				onClick={() => {
-					addChildNode(globalData.current as RootProps, 'table1', 'tableName3') && rerender()
-				}}
-			>
-				add
-			</button>
-			<Button onClick={clear}>clear</Button>
 			{/* 渲染graph */}
 			<div id='container' />
 		</>
