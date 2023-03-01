@@ -20,7 +20,7 @@ function RootGraph() {
 			nodeForm.resetFields()
 		}, 500)
 	}
-	const cancleSetNode = () => {
+	const cancelSetNode = () => {
 		setNodeModal(false)
 		nodeForm.resetFields()
 	}
@@ -32,7 +32,7 @@ function RootGraph() {
 	const RelationOk = () => {
 		setRelationModal(false)
 	}
-	const cancleSetRelation = () => {
+	const cancelSetRelation = () => {
 		setRelationModal(false)
 	}
 	// 容器 存放graph实例
@@ -223,7 +223,7 @@ function RootGraph() {
 			/>
 			{/* 渲染graph */}
 			<div id='container' />
-			<Modal title='节点操作' open={nodeModal} onOk={NodeOk} onCancel={cancleSetNode}>
+			<Modal title='节点操作' open={nodeModal} onOk={NodeOk} onCancel={cancelSetNode}>
 				<Form
 					form={nodeForm}
 					onFinish={(formRes) => {
@@ -293,7 +293,7 @@ function RootGraph() {
 					</Form.Item>
 				</Form>
 			</Modal>
-			<Modal title='关联关系' open={relationModal} onOk={RelationOk} onCancel={cancleSetRelation}>
+			<Modal title='关联关系' open={relationModal} onOk={RelationOk} onCancel={cancelSetRelation}>
 				<Form form={relationForm}>
 					<Form.Item label='关联方式'>
 						<Select
