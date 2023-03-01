@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { Cell, Node, Edge } from '@antv/x6'
-import { Button, Select, Modal, Form, Input, message } from 'antd'
+import { Button, Space, Select, Modal, Form, Input, message, Row, Col } from 'antd'
 import Hierarchy from '@antv/hierarchy'
-import { apiData, customGraph, joinTypeList, virtualTableList } from './conf'
+import { apiData, customGraph, joinTypeList, virtualTableList, tableColumns } from './conf'
 import type { MindMapProps, RootProps, LinksProps, JoinKeysProps } from './typing'
 import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
 import { get } from 'lodash-es'
+import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
 
 function RootGraph() {
 	/**
@@ -30,6 +31,7 @@ function RootGraph() {
 	const [relationForm] = Form.useForm()
 	const [relationModal, setRelationModal] = useState(false)
 	const RelationOk = () => {
+		relationForm.submit()
 		setRelationModal(false)
 	}
 	const cancelSetRelation = () => {
@@ -39,8 +41,8 @@ function RootGraph() {
 	const globalGraph = useRef<customGraph>()
 	const globalData = useRef<RootProps>({} as any)
 	// 根节点，选中的节点
-	const [sourceNode, setSourceNode] = useState()
-	const [targetNode, setTargetNode] = useState()
+	const [sourceNode, setSourceNode] = useState('')
+	const [targetNode, setTargetNode] = useState('')
 	const [sourceNodeList, setSourceNodeList] = useState()
 	const [targetNodeList, setTargetNodeList] = useState()
 	//选中的节点
@@ -119,11 +121,14 @@ function RootGraph() {
 		globalGraph.current?.on('edge:click', ({ cell }: { cell: Node | Edge }) => {
 			const sourceNodeName = get(cell, 'store.data.source.cell', '')
 			const targetNodeName = get(cell, 'store.data.target.cell', '')
-			console.log(sourceNodeName, targetNodeName)
-
+			setSourceNode(sourceNodeName)
+			setTargetNode(targetNodeName)
 			//先清除表单
 			relationForm.resetFields()
-
+			const formData = links.find((link) => {
+				return link.sourceTableName === sourceNodeName && link.targetTableName === targetNodeName
+			})
+			relationForm.setFieldsValue(formData)
 			setRelationModal(true)
 		})
 		// 有根节点才重新渲染
@@ -132,6 +137,7 @@ function RootGraph() {
 			globalGraph.current?.clearCells()
 		}
 	}, [links, virtualTableList])
+
 	/**
 	 * 获取值之后重新渲染
 	 * 不需要fromJson 因为我们在这里createNode
@@ -148,6 +154,7 @@ function RootGraph() {
 			getSide: () => 'right'
 		})
 		const cells: Cell[] = []
+
 		// 创建出新的根节点，连线等。
 		function create(HierarchyItem: any) {
 			if (HierarchyItem) {
@@ -199,16 +206,21 @@ function RootGraph() {
 				}
 			}
 		}
+
 		create(result)
 		// rerender 不需要 graph?.clearCells()
 		graph?.resetCells(cells)
 		graph?.centerContent()
 	}
+
 	// 这个地方我们只在根节点转换的时候调用。
 	function renderGraph(data: RootProps) {
 		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB') as RootProps
 		rerender()
 	}
+	useEffect(() => {
+		console.log(links)
+	}, [links])
 	return (
 		<>
 			选择根节点
@@ -239,8 +251,8 @@ function RootGraph() {
 								preLinks.push({
 									sourceTableName: selectedNodeId.current,
 									targetTableName: childrenNode,
-									joinType: 'left join',
-									joinKeys: []
+									joinType: 'left_outer_join',
+									joinKeys: [{}]
 								})
 								return [...preLinks]
 							})
@@ -257,9 +269,11 @@ function RootGraph() {
 								preLinks.forEach((link) => {
 									if (link['sourceTableName'] === selectedNodeId.current) {
 										link['sourceTableName'] = changedNode
+										link['joinKeys'] = [{}]
 									}
 									if (link['targetTableName'] === selectedNodeId.current) {
 										link['targetTableName'] = changedNode
+										link['joinKeys'] = [{}]
 									}
 									return
 								})
@@ -294,12 +308,103 @@ function RootGraph() {
 				</Form>
 			</Modal>
 			<Modal title='关联关系' open={relationModal} onOk={RelationOk} onCancel={cancelSetRelation}>
-				<Form form={relationForm}>
-					<Form.Item label='关联方式'>
+				<Form
+					form={relationForm}
+					onFinish={(formValue) => {
+						setLinks((preLinks) => {
+							const index = preLinks.findIndex((link) => {
+								return link.sourceTableName === sourceNode && link.targetTableName === targetNode
+							})
+							if (index >= 0) {
+								preLinks[index].joinKeys = formValue.joinKeys
+								preLinks[index].joinType = formValue.joinType
+							} else {
+								preLinks.push({
+									sourceTableName: sourceNode,
+									targetTableName: targetNode,
+									joinKeys: formValue.joinKeys,
+									joinType: formValue.joinType
+								})
+							}
+							return [...preLinks]
+						})
+						rerender()
+					}}
+				>
+					<Form.Item label='关联方式' name={'joinType'}>
 						<Select
 							placeholder={'请选择关联方式'}
-							options={joinTypeList.map((e) => ({ label: e.label, value: e.value }))}
+							options={joinTypeList.map((e) => ({
+								label: e.label,
+								value: e.value
+							}))}
 						/>
+					</Form.Item>
+					<Form.Item label='关联 key'>
+						<Row>
+							<Col span={10}>{sourceNode}</Col>
+							<Col span={10}>{targetNode}</Col>
+						</Row>
+						<Form.List name={'joinKeys'} initialValue={[{}]}>
+							{(fields, { add, remove }) => (
+								<>
+									{fields.map(({ key, name, ...restField }) => (
+										<Row key={key}>
+											<Col span={10}>
+												<Form.Item
+													{...restField}
+													name={[name, 'sourceKey']}
+													rules={[{ required: true, message: '请输入字段名' }]}
+												>
+													<Select
+														placeholder={'选择列'}
+														options={tableColumns.map((e) => ({
+															lable: e.columns,
+															value: e.columns
+														}))}
+													/>
+												</Form.Item>
+											</Col>
+											<Col span={10}>
+												<Form.Item noStyle shouldUpdate>
+													{() => (
+														<Form.Item
+															{...restField}
+															name={[name, 'targetKey']}
+															rules={[
+																{
+																	required: true,
+																	whitespace: true,
+																	message: '请选择'
+																}
+															]}
+														>
+															<Select
+																options={tableColumns.map((e) => ({
+																	lable: e.columns,
+																	value: e.columns
+																}))}
+															/>
+														</Form.Item>
+													)}
+												</Form.Item>
+											</Col>
+											<Col span={2}>
+												<Space direction='horizontal'>
+													<PlusCircleOutlined onClick={() => add()} />
+													{fields.length > 1 ? (
+														<MinusCircleOutlined
+															className='dynamic-delete-button'
+															onClick={() => remove(name)}
+														/>
+													) : null}
+												</Space>
+											</Col>
+										</Row>
+									))}
+								</>
+							)}
+						</Form.List>
 					</Form.Item>
 				</Form>
 			</Modal>

@@ -86,7 +86,9 @@ export const joinTypeList = [
 	{ label: '内连接', value: 'inner_join' },
 	{ label: '全连接', value: 'full_join' },
 	{ label: '连接', value: 'join' }
-]
+] as const
+
+export const tableColumns = Array.from({ length: 20 }, (_, i) => ({ columns: `column${i.toString()}` }))
 
 export const apiData = {
 	vtableNode: {

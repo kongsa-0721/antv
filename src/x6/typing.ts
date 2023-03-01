@@ -1,3 +1,5 @@
+import { joinTypeList } from './conf'
+
 interface MindMapProps {
 	children: MindMapProps[]
 	width: number
@@ -17,8 +19,8 @@ interface RootProps {
 interface LinksProps {
 	sourceTableName: string
 	targetTableName: string
-	joinType: 'left join'
-	joinKeys: Array<JoinKeysProps>
+	joinType: typeof joinTypeList[number]['value']
+	joinKeys: Array<JoinKeysProps | {}>
 }
 
 interface JoinKeysProps {
