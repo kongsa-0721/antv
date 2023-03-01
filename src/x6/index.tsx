@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { Cell, Node, Edge } from '@antv/x6'
-import { Button, Space, Select, Modal, Form, Input, message, Row, Col } from 'antd'
-import Hierarchy from '@antv/hierarchy'
-import { apiData, customGraph, joinTypeList, virtualTableList, tableColumns } from './conf'
-import type { MindMapProps, RootProps, LinksProps, JoinKeysProps } from './typing'
-import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
-import { get } from 'lodash-es'
+import { Space, Select, Modal, Form, Input, message, Row, Col } from 'antd'
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
-const { Option } = Select
+import { get } from 'lodash-es'
+import Hierarchy from '@antv/hierarchy'
+import { customGraph, joinTypeList, virtualTableList, tableColumns } from './conf'
+import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
+import type { MindMapProps, RootProps, LinksProps, JoinKeysProps } from './typing'
+
 function RootGraph() {
 	/**
 	 * 这里是设置节点间关系的form modal
@@ -180,16 +180,13 @@ function RootGraph() {
 								source: {
 									cell: HierarchyItem.id,
 									anchor: {
-										name: 'center'
+										name: 'right'
 									}
 								},
 								target: {
 									cell: id,
 									anchor: {
-										name: 'left',
-										args: {
-											y: '50%'
-										}
+										name: 'left'
 									}
 								}
 							})
@@ -208,7 +205,7 @@ function RootGraph() {
 
 	// 这个地方我们只在根节点转换的时候调用。
 	function renderGraph(data: RootProps) {
-		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB') as RootProps
+		globalData.current = treeDataToGraphTreeData(Object.assign({}, data), 'nodeDB') as RootProps
 		setLinks([])
 		rerender()
 	}
@@ -281,7 +278,7 @@ function RootGraph() {
 							placeholder='选择子节点'
 							options={virtualTableList
 								.filter((e) => {
-									return !hasId((globalData?.current as RootProps) || [], e.name)
+									return !hasId(globalData?.current as RootProps, e.name)
 								})
 								.map((e) => ({ label: e.name, value: e.name }))}
 						/>
@@ -291,7 +288,7 @@ function RootGraph() {
 							placeholder='修改节点为'
 							options={virtualTableList
 								.filter((e) => {
-									return !hasId((globalData?.current as RootProps) || [], e.name)
+									return !hasId(globalData?.current as RootProps, e.name)
 								})
 								.map((e) => ({ label: e.name, value: e.name }))}
 						/>

@@ -84,16 +84,17 @@ Graph.registerEdge(
 			}
 		},
 		router: {
-			name: 'orth',
+			name: 'er',
 			args: {
-				offset: 'left'
+				offset: 'center',
+				direction: 'H'
 			}
 		},
 		inherit: 'edge', //继承普通连线
 		connector: { name: 'normal' },
 		attrs: {
 			line: {
-				stroke: '#A2B1ff',
+				stroke: '#A2B1C3',
 				sourceMarker: '', // 实心箭头
 				targetMarker: {
 					name: 'block'
@@ -115,60 +116,5 @@ export const joinTypeList = [
 ] as const
 
 export const tableColumns = Array.from({ length: 20 }, (_, i) => ({ columns: `column${i.toString()}` }))
-
-export const apiData = {
-	vtableNode: {
-		projectId: 1,
-		tableName: 'table1',
-		filter: 'none',
-		childLinks: [{}],
-		children: [
-			{
-				projectId: 2,
-				tableName: 'table2',
-				filter: 'none',
-				childLinks: [{}],
-				children: [
-					{
-						projectId: 3,
-						tableName: 'table3',
-						filter: 'none',
-						childLinks: [{}],
-						children: [] //小心坑，如果是空数组，才可以approve
-					}
-				]
-			},
-			{
-				projectId: 4,
-				tableName: 'table4',
-				filter: 'none',
-				childLinks: [{}],
-				children: [
-					{
-						projectId: 5,
-						tableName: 'table5',
-						filter: 'none',
-						childLinks: [{}],
-						children: []
-					}
-				]
-			}
-		]
-	},
-	links: [
-		{
-			sourceTableName: 'string',
-			targetTableName: 'string',
-			joinType: 'string',
-			joinKeys: [
-				{
-					sourceKey: 'string',
-					targetKey: 'string',
-					condition: 'string'
-				}
-			]
-		}
-	]
-}
 
 export { Graph as customGraph }

@@ -20,7 +20,7 @@ interface LinksProps {
 	sourceTableName: string
 	targetTableName: string
 	joinType: typeof joinTypeList[number]['value']
-	joinKeys: Array<JoinKeysProps | {}>
+	joinKeys: Array<JoinKeysProps | object>
 }
 
 interface JoinKeysProps {
