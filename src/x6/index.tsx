@@ -7,7 +7,7 @@ import type { MindMapProps, RootProps, LinksProps, JoinKeysProps } from './typin
 import { treeDataToGraphTreeData, findNode, addChildNode, updateNode, removeNode, hasId } from './utils'
 import { get } from 'lodash-es'
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
-
+const { Option } = Select
 function RootGraph() {
 	/**
 	 * 这里是设置节点间关系的form modal
@@ -179,24 +179,17 @@ function RootGraph() {
 								shape: 'columnEdge',
 								source: {
 									cell: HierarchyItem.id,
-									anchor:
-										// {
-										// 	name: 'center',
-										// 	args: {
-										// 		dx: '25%'
-										// 	}
-										// }
-										{
-											name: 'right',
-											args: {
-												dx: -16
-											}
-										}
+									anchor: {
+										name: 'center'
+									}
 								},
 								target: {
 									cell: id,
 									anchor: {
-										name: 'left'
+										name: 'left',
+										args: {
+											y: '50%'
+										}
 									}
 								}
 							})
@@ -216,6 +209,7 @@ function RootGraph() {
 	// 这个地方我们只在根节点转换的时候调用。
 	function renderGraph(data: RootProps) {
 		globalData.current = treeDataToGraphTreeData(Object.assign({}, data) as any, 'nodeDB') as RootProps
+		setLinks([])
 		rerender()
 	}
 	useEffect(() => {

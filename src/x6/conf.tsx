@@ -1,4 +1,4 @@
-import { Graph, Path, Markup } from '@antv/x6'
+import { Graph, Path, Markup, Point } from '@antv/x6'
 
 //注册自定义节点类型
 Graph.registerNode(
@@ -8,7 +8,7 @@ Graph.registerNode(
 		attrs: {
 			label: {
 				fontSize: 14, // 定义节点相关的文本属性
-				fill: '#262626'
+				fill: '#999999'
 			},
 			body: {
 				rx: 6, // rect支持 圆角矩形
@@ -25,17 +25,37 @@ Graph.registerNode(
 //注册自定义连线类型
 Graph.registerConnector(
 	'dbTodb',
-	(sourcePoint, targetPoint, options: any) => {
-		const midX = sourcePoint.x + 10
+	(
+		sourcePoint: Point.PointLike,
+		targetPoint: Point.PointLike,
+		routePoints: Point.PointLike[],
+		args: { spread?: number; raw?: boolean }
+	) => {
+		console.log(sourcePoint, targetPoint, routePoints, args)
+
+		const midX = sourcePoint.x + 5
 		const midY = sourcePoint.y
-		const ctrX = (targetPoint.x - midX) / 5 + midX
-		const ctrY = targetPoint.y
-		const pathData = `
-                     M ${sourcePoint.x} ${sourcePoint.y}
-                     L ${midX} ${midY}
-                     Q ${ctrX} ${ctrY} ${targetPoint.x} ${targetPoint.y}
-                    `
-		return options.raw ? Path.parse(pathData) : pathData
+		const points: string[] = []
+
+		points.push(`M ${sourcePoint.x} ${sourcePoint.y}`)
+		points.push(`L ${midX} ${midY}`)
+
+		const length = routePoints.length
+		for (let i = 0; i < length; i++) {
+			const point = routePoints[i]
+			points.push(`L ${point.x} ${point.y}`)
+		}
+
+		const lastPoint = routePoints[length - 1] || sourcePoint
+		const distance = targetPoint.x - lastPoint.x
+		const endX = lastPoint.x + Math.min(30, distance / 2)
+
+		points.push(`M ${lastPoint.x} ${lastPoint.y}`)
+		points.push(`L ${endX} ${lastPoint.y}`)
+		points.push(`L ${endX} ${targetPoint.y}`)
+		points.push(`L ${targetPoint.x} ${targetPoint.y}`)
+
+		return Path.parse(points.join(' '))
 	},
 	true
 )
@@ -63,15 +83,21 @@ Graph.registerEdge(
 				}
 			}
 		},
-		inherit: 'edge', //继承普通连线
-		connector: {
-			name: 'dbTodb'
+		router: {
+			name: 'orth',
+			args: {
+				offset: 'left'
+			}
 		},
+		inherit: 'edge', //继承普通连线
+		connector: { name: 'normal' },
 		attrs: {
 			line: {
-				targetMarker: '',
-				stroke: 'orange',
-				strokeWidth: 2
+				stroke: '#A2B1ff',
+				sourceMarker: '', // 实心箭头
+				targetMarker: {
+					name: 'block'
+				}
 			}
 		},
 		zIndex: 0
