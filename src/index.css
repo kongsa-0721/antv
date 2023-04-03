@@ -9,3 +9,10 @@ body {
 code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
+
+.ant-page-header {
+	padding: 0 0 16px 0;
+}
+.ant-layout-header {
+	padding-inline: 25px !important;
+}
